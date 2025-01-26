@@ -5,7 +5,7 @@ library(dplyr)
 library(readxl)
 library(ggplot2)
 
-dt <- read_excel("./health_literacy_subgroup_forestplot_data_aRR.xlsx")
+dt <- read_excel("./data/health_literacy_subgroup_forestplot_data_aRR.xlsx")
 
 dt$Subgroup <- ifelse(is.na(dt$intervention), 
                       dt$Subgroup,
@@ -68,11 +68,6 @@ g <- edit_plot(p,
                row = c(2,6,9,12,15,19,22),
                gp = gpar(fontface = "bold"))
 
-# g <- edit_plot(g,
-#                row = c(1),
-#                col = c(1),
-#                gp = gpar(fontface = "bold"))
-
 # Edit the background
 g <- edit_plot(g, row = c(1:26), which = "background",
                gp = gpar(fill = "white"))
@@ -94,30 +89,17 @@ g <- insert_text(g,
                  part = "header",
                  gp = gpar(fontface = "bold"))
 
-# g <- insert_text(g,
-#                  text = "Fig. 2 | Multivariable logistic regression to compare HBV and HCV test uptake rates of two arms.",
-#                  col = 1:2,
-#                  row = c(28),
-#                  part = "body",
-#                  just = "left",
-#                  gp = gpar(cex = 0.5)
-#                  )
-
 # Add underline at the bottom of the header
 g <- add_border(g, part = "header", row = 1, where = "top")
 g <- add_border(g, part = "header", row = 2, where = "bottom", gp = gpar(lwd = 1))
 g <- add_border(g, part = "header", row = 1, col = 2:3, 
                 gp = gpar(lwd = 2))
 
-#g <- add_border(g, part = "header", row = 29, where = "bottom")
-
-#g <- add_border(g, part = "body", row = 1, where = "bottom")
-
 # Assuming 'g' is your ggplot object
 ggsave("./health_literacy_subgroup_forestplot_data_aRR.pdf", plot = g, device = "pdf", width = 10, height = 7, units = "in")
 
 # Assuming 'g' is your ggplot object
-ggsave("./health_literacy_subgroup_forestplot_data_aRR.png", plot = g, width = 9.5, height = 7, units = "in", dpi = 600)
+ggsave("./health_literacy_subgroup_forestplot_data_aRR.png", plot = g, width = 9, height = 7, units = "in", dpi = 600)
 
 # Print plot
 plot(g)

@@ -5,7 +5,7 @@ library(dplyr)
 library(readxl)
 library(ggplot2)
 
-dt <- read_excel("./hpv_vaccine_uptake_forestplotRR.xlsx")
+dt <- read_excel("./data/hpv_vaccine_uptake_forestplotRR.xlsx")
 
 dt$Subgroup <- ifelse(is.na(dt$intervention), 
                       dt$Subgroup,
@@ -96,24 +96,11 @@ g <- insert_text(g,
                  part = "header",
                  gp = gpar(fontface = "bold"))
 
-# g <- insert_text(g,
-#                  text = "Fig. 2 | Multivariable logistic regression to compare HBV and HCV test uptake rates of two arms.",
-#                  col = 1:2,
-#                  row = c(28),
-#                  part = "body",
-#                  just = "left",
-#                  gp = gpar(cex = 0.5)
-#                  )
-
 # Add underline at the bottom of the header
 g <- add_border(g, part = "header", row = 1, where = "top")
 g <- add_border(g, part = "header", row = 2, where = "bottom", gp = gpar(lwd = 1))
 g <- add_border(g, part = "header", row = 1, col = 2:3, 
                 gp = gpar(lwd = 2))
-
-#g <- add_border(g, part = "header", row = 29, where = "bottom")
-
-#g <- add_border(g, part = "body", row = 1, where = "bottom")
 
 # Assuming 'g' is your ggplot object
 ggsave("./hpv_vaccine_uptake_forestplotRR.pdf", plot = g, device = "pdf", width = 9, height = 7, units = "in")
