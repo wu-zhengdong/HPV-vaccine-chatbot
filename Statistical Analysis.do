@@ -1,6 +1,6 @@
 
 ///import database
-use 'the storage path of the database'
+use 'the storage path of the database of '
 
 ///////// Table 1 | Baseline characteristics of parents and their daughters by classes and individuals
 
@@ -30,7 +30,7 @@ ttest newage if time==0,by(treatment)
 tab treatment education if time==0, chi2 row
 tab treatment occupation if time==0, chi2 row
 tab treatment income if time==0, chi2 row
-tab treatment 母亲接种 if time==0, chi2 row
+tab treatment m_vaccinated if time==0, chi2 row
 
 
 
@@ -166,13 +166,34 @@ by income,sort: xtmixed literacy treatment time treatment_time i.only_child i.in
 
 
 
+
+
+//////// Extended Data Table 1 | Comparative characteristics of enrolled and non-enrolled participants
+use "the storage path of the database of Extended table1 (3304).dta"
+foreach var of varlist  grade only_child sexual_education influenza_vaccination citytype relationship education occupation income m_vaccinated{
+  by time,sort:tab enrolled `var', chi2 row
+}
+ttest girls_age,by(enrolled)
+ttest newage,by(enrolled)
+
+
+
 //////// Extended Data Table 2 | Proportions of parents correctly answered HPV or its vaccine related statements.
+use "the storage path of the database of Expended database (2671).dta"
 foreach var of varlist statements1 statements2 statements3 statements4 statements5 statements6 statements7 statements8 statements9 statements10 {
   by time,sort:tab treatment `var', chi2 row
 }
 
 
-//////// Extended Data Table 3 | Sensitivity analysis
+/////// Extended Data Table 3 | Comparative characteristics of chatbot users and non-users in the intervention group
+foreach var of varlist  grade only_child sexual_education influenza_vaccination citytype relationship education occupation income m_vaccinated{
+  by time,sort:tab chatbot_use `var' if time==0, chi2 row
+}
+ttest girls_age if time==0,by(chatbot_use)
+ttest newage if time==0,by(chatbot_use)
+
+
+/////// Extended Data Table 5 | Per-protocol analysis
 /// HPV vaccination uptake
 tab chatbot vac_bahaviour, chi2 row
 by chatbot, sort: ci proportions vac_bahaviour, wald
