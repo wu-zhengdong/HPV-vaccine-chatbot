@@ -1,10 +1,11 @@
-
 ///import database
-use 'the storage path of the database of '
+use 'the storage path of the database of ...'
 
-///////// Table 1 | Baseline characteristics of parents and their daughters by classes and individuals
+************************************************
+** Table 1 | Baseline characteristics of parents and their daughters by classes and individuals
+************************************************
 
-///classes level
+* Class-level analysis
 preserve
 bysort treatment grade class: keep if _n == 1
 bysort treatment: tabulate grade, missing
@@ -15,221 +16,278 @@ bysort treatment citytype class: keep if _n == 1
 bysort treatment: tabulate citytype, missing
 restore
 
-///Individual level-Participants’ daughter
+* Individual-level analysis: Daughters' characteristics
 tab treatment grade if time==0, chi2 row
-ttest Girls_age if time==0,by(treatment) 
+ttest Girls_age if time==0, by(treatment) 
 tab treatment only_child if time==0, chi2 row
 tab treatment Left_behind if time==0, chi2 row
 tab treatment sexual_education if time==0, chi2 row
 tab treatment influenza_vaccination if time==0, chi2 row
 
-///Individual level-Participants
+* Individual-level analysis: Parents' characteristics
 tab treatment citytype if time==0, chi2 row
 tab treatment relationship if time==0, chi2 row
-ttest newage if time==0,by(treatment) 
+ttest newage if time==0, by(treatment) 
 tab treatment education if time==0, chi2 row
 tab treatment occupation if time==0, chi2 row
 tab treatment income if time==0, chi2 row
 tab treatment m_vaccinated if time==0, chi2 row
 
 
-
-////////  Table 2 | Primary and secondary outcomes analyses: HPV vaccination uptake among middle school girls, health professional
-////////  consultations, parental HPV-related literacy, vaccine confidence, and willingness to vaccinate
+************************************************
+** Table 2 | Effect of HPV vaccine chatbot intervention on primary and secondary outcomes
+************************************************
 xtset class
-///HPV vaccination uptake
+
+* Primary outcome: HPV vaccine receipt or scheduled appointment among female students
 tab treatment vac_bahaviour, chi2 row
 by treatment, sort: ci proportions vac_bahaviour, wald
 xtgee vac_bahaviour treatment ib3.citytype ib2.only_child i.influenza_vaccination i.sexual_education i.Left_behind i.relationship ///
-newage ib2.m_vaccinated ib3.education i.occupation i.income, family(binomial) link(log) corr(exchangeable) vce(robust) eform
+      newage ib2.m_vaccinated ib3.education i.occupation i.income, family(binomial) link(log) corr(exchangeable) vce(robust) eform
 
-///Health professional consultation
+* Secondary outcome: HPV vaccination-specific consultation
 tab treatment bi_consultation, chi2 row
 by treatment, sort: ci proportions bi_consultation, wald
 xtgee bi_consultation treatment ib3.citytype ib2.only_child i.influenza_vaccination i.sexual_education i.Left_behind i.relationship ///
-newage i.m_vaccinated ib3.education i.occupation ib4.income, family(binomial) link(log) corr(independent) vce(robust) eform
+      newage i.m_vaccinated ib3.education i.occupation ib4.income, family(binomial) link(log) corr(independent) vce(robust) eform
 
-///Willingness to vaccinate
-by treatment,sort:tab time bi_willingness,chi2 row
+* Secondary outcome: Parental willingness to vaccinate their daughter
+by treatment, sort: tab time bi_willingness, chi2 row
 cs bi_willingness time if treatment==1
 cs bi_willingness time if treatment==0
-xtgee bi_willingness treatment time treatment_time ib3.citytype newage i.relationship i.m_vaccinated i.education, family(binomial) link(log) corr(exchangeable) vce(robust) eform 
+xtgee bi_willingness treatment time treatment_time ib3.citytype newage i.relationship i.m_vaccinated i.education, ///
+      family(binomial) link(log) corr(exchangeable) vce(robust) eform 
 
-///High confidence
-by treatment,sort:tab time high_confidence,chi2 row
+* Secondary outcome: HPV vaccine confidence
+by treatment, sort: tab time high_confidence, chi2 row
 cs high_confidence time if treatment==1
 cs high_confidence time if treatment==0
 xtgee high_confidence treatment time treatment_time ib3.citytype i.influenza_vaccination i.relationship newage i.m_vaccinated ///
-ib3.education i.occupation, family(binomial) link(log) corr(exchangeable) vce(robust) eform
+      ib3.education i.occupation, family(binomial) link(log) corr(exchangeable) vce(robust) eform
 
-/// HPV related lireracy
-by treatment,sort:ttest literacy,by(time)
-by treatment,sort:ttest knowledge_literacy,by(time)
-by treatment,sort:ttest rumor_literacy,by(time)
+* Secondary outcome: HPV-related literacy
+by treatment, sort: ttest literacy, by(time)
+by treatment, sort: ttest knowledge_literacy, by(time)
+by treatment, sort: ttest rumor_literacy, by(time)
 xtmixed literacy treatment time treatment_time ib3.citytype i.only_child i.influenza_vaccination i.sexual_education i.Left_behind i.relationship /// 
-newage i.m_vaccinated ib3.education i.occupation i.income, vce(cluster class)
+        newage i.m_vaccinated ib3.education i.occupation i.income, vce(cluster class)
 xtmixed knowledge_literacy treatment time treatment_time ib3.citytype i.only_child i.influenza_vaccination i.sexual_education i.Left_behind i.relationship /// 
-newage i.m_vaccinated ib3.education i.occupation i.income, vce(cluster class)
+        newage i.m_vaccinated ib3.education i.occupation i.income, vce(cluster class)
 xtmixed rumor_literacy treatment time treatment_time ib3.citytype i.only_child i.influenza_vaccination i.sexual_education i.Left_behind i.relationship /// 
-newage i.m_vaccinated ib3.education i.occupation i.income, vce(cluster class)
+        newage i.m_vaccinated ib3.education i.occupation i.income, vce(cluster class)
 
 
-///////// Fig. 2 | Stratified multivariable Generalized estimating equation (GEE) to compare HPV vaccination uptake of two arms.
+************************************************
+** Fig. 2 | Stratified generalized estimating equation (GEE) to compare HPV vaccine receipt or scheduled appointment between two arms
+************************************************
+
+* Overall comparison
 tab treatment vac_bahaviour, chi2 row
 
+* Stratified analyses by demographic variables
 foreach var of varlist citytype Left_behind relationship m_vaccinated education occupation income {
-  by `var',sort:tab treatment vac_bahaviour, chi2 row
+  by `var', sort: tab treatment vac_bahaviour, chi2 row
 }
 
+* Overall adjusted model
 xtgee vac_bahaviour treatment ib3.citytype i.only_child i.influenza_vaccination i.sexual_education i.Left_behind i.relationship ///
-newage ib2.m_vaccinated ib3.education i.occupation i.income, family(binomial) link(log) corr(exchangeable) vce(robust) eform
+      newage ib2.m_vaccinated ib3.education i.occupation i.income, family(binomial) link(log) corr(exchangeable) vce(robust) eform
 
-by education,sort: xtgee vac_bahaviour treatment i.only_child influenza_vaccination i.sexual_education i.Left_behind ib3.citytype newage ///
-i.relationship i.m_vaccinated i.occupation i.income, family(binomial) link(log) corr(exchangeable) vce(robust) eform
+* Stratified models by education
+by education, sort: xtgee vac_bahaviour treatment i.only_child influenza_vaccination i.sexual_education i.Left_behind ib3.citytype newage ///
+      i.relationship i.m_vaccinated i.occupation i.income, family(binomial) link(log) corr(exchangeable) vce(robust) eform
 
-by income,sort: xtgee vac_bahaviour treatment i.only_child i.influenza_vaccination i.sexual_education i.Left_behind ib3.citytype ///
-newage i.relationship i.m_vaccinated i.education i.occupation, family(binomial) link(log) corr(exchangeable) vce(robust) eform
+* Stratified models by income
+by income, sort: xtgee vac_bahaviour treatment i.only_child i.influenza_vaccination i.sexual_education i.Left_behind ib3.citytype ///
+      newage i.relationship i.m_vaccinated i.education i.occupation, family(binomial) link(log) corr(exchangeable) vce(robust) eform
 
-by occupayion,sort: xtgee vac_bahaviour treatment i.only_child i.influenza_vaccination i.sexual_education i.Left_behind ib3.citytype ///
-newage i.relationship i.m_vaccinated i.education i.income, family(binomial) link(log) corr(exchangeable) vce(robust) eform
+* Stratified models by occupation
+by occupation, sort: xtgee vac_bahaviour treatment i.only_child i.influenza_vaccination i.sexual_education i.Left_behind ib3.citytype ///
+      newage i.relationship i.m_vaccinated i.education i.income, family(binomial) link(log) corr(exchangeable) vce(robust) eform
 
-by citytype,sort: xtgee vac_bahaviour treatment i.only_child i.influenza_vaccination i.sexual_education i.Left_behind newage i.relationship ///
-ib2.m_vaccinated i.education i.occupation i.income, family(binomial) link(log) corr(exchangeable) vce(robust) eform
+* Stratified models by city type
+by citytype, sort: xtgee vac_bahaviour treatment i.only_child i.influenza_vaccination i.sexual_education i.Left_behind newage i.relationship ///
+      ib2.m_vaccinated i.education i.occupation i.income, family(binomial) link(log) corr(exchangeable) vce(robust) eform
 
-by Left_behind, xtgee vac_bahaviour treatment i.only_child i.influenza_vaccination i.sexual_education ib3.citytype newage i.relationship ///
-i.m_vaccinated i.education i.occupation i.income if Left_behind==0, family(binomial) link(log) corr(exchangeable) vce(robust) eform
+* Stratified models by left-behind status
+by Left_behind, sort: xtgee vac_bahaviour treatment i.only_child i.influenza_vaccination i.sexual_education ib3.citytype newage i.relationship ///
+      i.m_vaccinated i.education i.occupation i.income if Left_behind==0, family(binomial) link(log) corr(exchangeable) vce(robust) eform
 
-by relationship,sort: xtgee vac_bahaviour treatment i.only_child i.influenza_vaccination i.sexual_education i.Left_behind ib3.citytype ///
-newage i.m_vaccinated i.education i.occupation i.income, family(binomial) link(log) corr(exchangeable) vce(robust) eform
-
-by relationship,sort: xtgee vac_bahaviour treatment i.only_child i.influenza_vaccination i.sexual_education i.Left_behind ib3.citytype ///
-newage i.relationship i.education i.occupation i.income if 母亲接种 ==2, family(binomial) link(log) corr(exchangeable) vce(robust) eform
+* Stratified models by relationship
+by relationship, sort: xtgee vac_bahaviour treatment i.only_child i.influenza_vaccination i.sexual_education i.Left_behind ib3.citytype ///
+      newage i.m_vaccinated i.education i.occupation i.income, family(binomial) link(log) corr(exchangeable) vce(robust) eform
 
 
-////////// Extended Data Fig. 1 | Stratified multivariable Generalized estimating equation (GEE) to compare health professional consultation of two arms.
+************************************************
+** Extended Data Fig. 1 | Stratified generalized estimating equation (GEE) to compare HPV vaccination-specific consultation with health professionals between two arms
+************************************************
+
+* Overall comparison
 tab treatment bi_consultation, chi2 row
+
+* Stratified analyses by demographic variables
 foreach var of varlist citytype Left_behind relationship m_vaccinated education occupation income {
-  by `var',sort:tab treatment bi_consultation, chi2 row
+  by `var', sort: tab treatment bi_consultation, chi2 row
 }
 
+* Overall adjusted model
 xtgee bi_consultation treatment ib3.citytype ib2.only_child i.influenza_vaccination i.sexual_education i.Left_behind i.relationship ///
-newage i.m_vaccinated ib3.education i.occupation ib4.income, family(binomial) link(log) corr(independent) vce(robust) eform
+      newage i.m_vaccinated ib3.education i.occupation ib4.income, family(binomial) link(log) corr(independent) vce(robust) eform
 
-xtgee bi_consultation treatment i.only_child i.influenza_vaccination i.sexual_education i.Left_behind i.relationship i.m_vaccinated ib3.education i.occupation ib4.income if citytype==1, family(binomial) link(log) corr(independent) vce(robust) eform
-xtgee bi_consultation treatment i.only_child i.influenza_vaccination i.sexual_education i.Left_behind i.relationship i.m_vaccinated ib3.education i.occupation ib4.income if citytype==2, family(binomial) link(log) corr(independent) vce(robust) eform
-xtgee bi_consultation treatment i.only_child i.influenza_vaccination i.sexual_education i.Left_behind i.relationship newage i.m_vaccinated ib3.education i.occupation if citytype==3, family(binomial) link(log) corr(independent) vce(robust) eform
+* Stratified models by city type
+foreach level in 1 2 3 {
+  xtgee bi_consultation treatment i.only_child i.influenza_vaccination i.sexual_education i.Left_behind i.relationship newage i.m_vaccinated ib3.education i.occupation ib4.income if citytype==`level', family(binomial) link(log) corr(independent) vce(robust) eform
+}
 
+* Stratified models by left-behind status
 xtgee bi_consultation treatment ib3.citytype i.only_child i.relationship i.m_vaccinated ib3.education i.occupation if Left_behind==1, family(binomial) link(log) corr(independent) vce(robust) eform
 xtgee bi_consultation treatment ib3.citytype i.only_child i.influenza_vaccination i.sexual_education i.relationship i.m_vaccinated ib3.education i.occupation ib4.income if Left_behind==0, family(binomial) link(log) corr(independent) vce(robust) eform
 
-xtgee bi_consultation treatment ib3.citytype i.only_child i.influenza_vaccination i.sexual_education i.Left_behind newage i.m_vaccinated ib3.education i.occupation ib4.income if relationship==1, family(binomial) link(log) corr(independent) vce(robust) eform
-xtgee bi_consultation treatment ib3.citytype i.only_child i.influenza_vaccination i.sexual_education i.Left_behind newage i.m_vaccinated ib3.education i.occupation ib4.income if relationship==2, family(binomial) link(log) corr(independent) vce(robust) eform
+* Stratified models by relationship
+foreach level in 1 2 {
+  xtgee bi_consultation treatment ib3.citytype i.only_child i.influenza_vaccination i.sexual_education i.Left_behind newage i.m_vaccinated ib3.education i.occupation ib4.income if relationship==`level', family(binomial) link(log) corr(independent) vce(robust) eform
+}
 
-xtgee bi_consultation treatment ib3.citytype i.only_child i.influenza_vaccination i.sexual_education i.Left_behind newage i.relationship ib3.education i.occupation ib4.income if m_vaccinated==1, family(binomial) link(log) corr(independent) vce(robust) eform
-xtgee bi_consultation treatment ib3.citytype i.only_child i.influenza_vaccination i.sexual_education i.Left_behind newage i.relationship ib3.education i.occupation ib4.income if m_vaccinated==0, family(binomial) link(log) corr(independent) vce(robust) eform
+* Stratified models by mother's vaccination status
+foreach level in 0 1 {
+  xtgee bi_consultation treatment ib3.citytype i.only_child i.influenza_vaccination i.sexual_education i.Left_behind newage i.relationship ib3.education i.occupation ib4.income if m_vaccinated==`level', family(binomial) link(log) corr(independent) vce(robust) eform
+}
 
-xtgee bi_consultation treatment ib3.citytype i.only_child i.influenza_vaccination i.sexual_education i.Left_behind newage i.relationship ib3.education i.m_vaccinated ib4.income if occupation==1, family(binomial) link(log) corr(independent) vce(robust) eform
-xtgee bi_consultation treatment ib3.citytype i.only_child i.influenza_vaccination i.sexual_education i.Left_behind newage i.relationship ib3.education i.m_vaccinated ib4.income if occupation==0, family(binomial) link(log) corr(independent) vce(robust) eform
+* Stratified models by occupation
+foreach level in 0 1 {
+  xtgee bi_consultation treatment ib3.citytype i.only_child i.influenza_vaccination i.sexual_education i.Left_behind newage i.relationship ib3.education i.m_vaccinated ib4.income if occupation==`level', family(binomial) link(log) corr(independent) vce(robust) eform
+}
 
-xtgee bi_consultation treatment ib3.citytype i.only_child i.influenza_vaccination i.sexual_education newage i.relationship i.occupation i.m_vaccinated ib4.income if education==1, family(binomial) link(log) corr(independent) vce(robust) eform
-xtgee bi_consultation treatment ib3.citytype i.only_child i.influenza_vaccination newage i.relationship i.occupation i.m_vaccinated ib4.income if education==2, family(binomial) link(log) corr(independent) vce(robust) eform
-xtgee bi_consultation treatment ib3.citytype i.only_child i.influenza_vaccination i.sexual_education newage i.relationship i.occupation i.m_vaccinated ib4.income if education==3, family(binomial) link(log) corr(independent) vce(robust) eform
+* Stratified models by education
+foreach level in 1 2 3 {
+  xtgee bi_consultation treatment ib3.citytype i.only_child i.influenza_vaccination i.sexual_education newage i.relationship i.occupation i.m_vaccinated ib4.income if education==`level', family(binomial) link(log) corr(independent) vce(robust) eform
+}
 
-xtgee bi_consultation treatment ib3.citytype i.only_child i.influenza_vaccination i.sexual_education newage i.relationship i.occupation i.m_vaccinated ib3.education if income==1, family(binomial) link(log) corr(independent) vce(robust) eform
-xtgee bi_consultation treatment ib3.citytype i.only_child i.influenza_vaccination newage i.relationship i.occupation i.m_vaccinated ib3.education if income==2, family(binomial) link(log) corr(independent) vce(robust) eform
-xtgee bi_consultation treatment ib3.citytype i.only_child i.relationship i.occupation i.m_vaccinated ib3.education if income==3, family(binomial) link(log) corr(independent) vce(robust) eform
-xtgee bi_consultation treatment ib3.citytype i.relationship i.m_vaccinated i.education i.income if income==4, family(binomial) link(log) corr(independent) vce(robust) eform
+* Stratified models by income
+foreach level in 1 2 3 4 {
+  xtgee bi_consultation treatment ib3.citytype i.only_child i.influenza_vaccination i.sexual_education newage i.relationship i.occupation i.m_vaccinated ib3.education if income==`level', family(binomial) link(log) corr(independent) vce(robust) eform
+}
 
 
+************************************************
+** Extended Data Fig. 2 | Stratified mixed-effects model to compare HPV literacy between two arms
+************************************************
 
-///////// Extended Data Fig. 2 | Stratified multivariable mixed effect model to compare HPV literacy of two arms. 
-by treatment, sort: ttest literacy ,by(time)
+* Overall comparison
+by treatment, sort: ttest literacy, by(time)
+
+* Stratified analyses by demographic variables
 foreach var of varlist citytype Left_behind relationship m_vaccinated education occupation income {
-  by `var' treatment,sort: ttest literacy ,by(time)
+  by `var' treatment, sort: ttest literacy, by(time)
 }
 
-xtmixed literacy treatment time treatment_time ib3.citytype i.only_child i.influenza_vaccination i.sexual_education i.Left_behind i.relationship newage i.m_vaccinated ib3.education i.occupation i.income, vce(cluster class)
+* Overall adjusted model
+xtmixed literacy treatment time treatment_time ib3.citytype i.only_child i.influenza_vaccination i.sexual_education i.Left_behind i.relationship /// 
+        newage i.m_vaccinated ib3.education i.occupation i.income, vce(cluster class)
 
-by citytype,sort: xtmixed literacy treatment time treatment_time i.only_child i.influenza_vaccination i.sexual_education i.Left_behind i.relationship newage i.m_vaccinated i.education i.occupation i.income, vce(cluster class)
+* Stratified models by city type
+by citytype, sort: xtmixed literacy treatment time treatment_time i.only_child i.influenza_vaccination i.sexual_education i.Left_behind i.relationship newage i.m_vaccinated i.education i.occupation i.income, vce(cluster class)
 
-by Left_behind,sort: xtmixed literacy treatment time treatment_time i.only_child i.influenza_vaccination i.sexual_education i.citytype i.relationship newage i.m_vaccinated i.education i.occupation i.income, vce(cluster class)
+* Stratified models by left-behind status
+by Left_behind, sort: xtmixed literacy treatment time treatment_time i.only_child i.influenza_vaccination i.sexual_education i.citytype i.relationship newage i.m_vaccinated i.education i.occupation i.income, vce(cluster class)
 
-by relationship,sort: xtmixed literacy treatment time treatment_time i.only_child i.influenza_vaccination i.sexual_education i.citytype i.Left_behind newage i.m_vaccinated i.education i.occupation i.income, vce(cluster class)
+* Stratified models by relationship
+by relationship, sort: xtmixed literacy treatment time treatment_time i.only_child i.influenza_vaccination i.sexual_education i.citytype i.Left_behind newage i.m_vaccinated i.education i.occupation i.income, vce(cluster class)
 
-by m_vaccinated,sort: xtmixed literacy treatment time treatment_time i.only_child i.influenza_vaccination i.sexual_education i.citytype i.Left_behind newage i.relationship i.education i.occupation i.income, vce(cluster class)
+* Stratified models by mother's vaccination status
+by m_vaccinated, sort: xtmixed literacy treatment time treatment_time i.only_child i.influenza_vaccination i.sexual_education i.citytype i.Left_behind newage i.relationship i.education i.occupation i.income, vce(cluster class)
 
-by education,sort: xtmixed literacy treatment time treatment_time i.only_child i.influenza_vaccination i.sexual_education i.citytype i.Left_behind newage i.relationship i.m_vaccinated i.occupation i.income, vce(cluster class)
+* Stratified models by education
+by education, sort: xtmixed literacy treatment time treatment_time i.only_child i.influenza_vaccination i.sexual_education i.citytype i.Left_behind newage i.relationship i.m_vaccinated i.occupation i.income, vce(cluster class)
 
-by occupation,sort: xtmixed literacy treatment time treatment_time i.only_child i.influenza_vaccination i.sexual_education i.citytype i.Left_behind newage i.relationship i.m_vaccinated i.education i.income, vce(cluster class)
+* Stratified models by occupation
+by occupation, sort: xtmixed literacy treatment time treatment_time i.only_child i.influenza_vaccination i.sexual_education i.citytype i.Left_behind newage i.relationship i.m_vaccinated i.education i.income, vce(cluster class)
 
-by income,sort: xtmixed literacy treatment time treatment_time i.only_child i.influenza_vaccination i.sexual_education i.citytype i.Left_behind newage i.relationship i.m_vaccinated i.education i.occupation, vce(cluster class)
+* Stratified models by income
+by income, sort: xtmixed literacy treatment time treatment_time i.only_child i.influenza_vaccination i.sexual_education i.citytype i.Left_behind newage i.relationship i.m_vaccinated i.education i.occupation, vce(cluster class)
 
 
+************************************************
+** Extended Data Table 1 | Comparative characteristics of enrolled and non-enrolled participants
+************************************************
 
+use "the storage path of the database of ...", clear
 
-
-//////// Extended Data Table 1 | Comparative characteristics of enrolled and non-enrolled participants
-use "the storage path of the database of Extended table1 (3304).dta"
-foreach var of varlist  grade only_child sexual_education influenza_vaccination citytype relationship education occupation income m_vaccinated{
-  by time,sort:tab enrolled `var', chi2 row
+* Categorical variables comparison
+foreach var of varlist grade only_child sexual_education influenza_vaccination citytype relationship education occupation income m_vaccinated {
+  by time, sort: tab enrolled `var', chi2 row
 }
-ttest girls_age,by(enrolled)
-ttest newage,by(enrolled)
+
+* Continuous variables comparison
+ttest girls_age, by(enrolled)
+ttest newage, by(enrolled)
 
 
+************************************************
+** Extended Data Table 2 | Proportions of parents correctly answered HPV or its vaccine related statements
+************************************************
 
-//////// Extended Data Table 2 | Proportions of parents correctly answered HPV or its vaccine related statements.
-use "the storage path of the database of Expended database (2671).dta"
-foreach var of varlist statements1 statements2 statements3 statements4 statements5 statements6 statements7 statements8 statements9 statements10 {
-  by time,sort:tab treatment `var', chi2 row
+use "the storage path of the database of ...", clear
+
+foreach var of varlist statements1-statements10 {
+  by time, sort: tab treatment `var', chi2 row
 }
 
 
-/////// Extended Data Table 3 | Comparative characteristics of chatbot users and non-users in the intervention group
-foreach var of varlist  grade only_child sexual_education influenza_vaccination citytype relationship education occupation income m_vaccinated{
-  by time,sort:tab chatbot_use `var' if time==0, chi2 row
+************************************************
+** Extended Data Table 3 | Comparative characteristics of chatbot users and non-users in the intervention group
+************************************************
+
+* Categorical variables comparison at baseline
+foreach var of varlist grade only_child sexual_education influenza_vaccination citytype relationship education occupation income m_vaccinated {
+  tab chatbot_use `var' if time==0, chi2 row
 }
-ttest girls_age if time==0,by(chatbot_use)
-ttest newage if time==0,by(chatbot_use)
+
+* Continuous variables comparison at baseline
+ttest girls_age if time==0, by(chatbot_use)
+ttest newage if time==0, by(chatbot_use)
 
 
-/////// Extended Data Table 5 | Per-protocol analysis
-/// HPV vaccination uptake
+************************************************
+** Extended Data Table 5 | Per-protocol analysis of HPV vaccine chatbot intervention effects on primary and secondary outcomes
+************************************************
+
+* Primary outcome: HPV vaccine receipt or scheduled appointment among female students
 tab chatbot vac_bahaviour, chi2 row
 by chatbot, sort: ci proportions vac_bahaviour, wald
 xtgee vac_bahaviour chatbot ib3.citytype i.only_child i.influenza_vaccination i.sexual_education i.Left_behind i.relationship ///
-newage ib2.m_vaccinated ib3.education i.occupation i.income, family(binomial) link(log) corr(exchangeable) vce(robust) eform
+      newage ib2.m_vaccinated ib3.education i.occupation i.income, family(binomial) link(log) corr(exchangeable) vce(robust) eform
 
-/// Health professional consultation
+* Secondary outcome: HPV vaccination-specific consultation
 tab chatbot bi_consultation, chi2 row
 by chatbot, sort: ci proportions bi_consultation, wald
 xtgee bi_consultation chatbot ib3.citytype i.only_child i.influenza_vaccination i.sexual_education i.Left_behind i.relationship /// 
-newage i.m_vaccinated ib3.education i.occupation ib4.income, family(binomial) link(log) corr(exchangeable) vce(robust) eform
+      newage i.m_vaccinated ib3.education i.occupation ib4.income, family(binomial) link(log) corr(exchangeable) vce(robust) eform
 
-/// Willingness to vaccinate
-by chatbot,sort:tab time bi_willingness,chi2 row
+* Secondary outcome: Parental willingness to vaccinate their daughter
+by chatbot, sort: tab time bi_willingness, chi2 row
 cs bi_willingness time if chatbot==1
 cs bi_willingness time if chatbot==0
-xtgee bi_willingness chatbot time treatment_time ib3.citytype i.only_child newage i.relationship i.m_vaccinated i.occupation i.Left_behind, family(binomial) link(log) corr(exchangeable) vce(robust) eform 
+xtgee bi_willingness chatbot time treatment_time ib3.citytype i.only_child newage i.relationship i.m_vaccinated i.occupation i.Left_behind, ///
+      family(binomial) link(log) corr(exchangeable) vce(robust) eform 
 
-/// High confidence
-by chatbot,sort:tab time high_confidence,chi2 row
+* Secondary outcome: HPV vaccine confidence
+by chatbot, sort: tab time high_confidence, chi2 row
 cs high_confidence time if chatbot==1
 cs high_confidence time if chatbot==0
 xtgee high_confidence chatbot time treatment_time ib3.citytype i.only_child newage i.relationship i.m_vaccinated ///
-i.occupation i.Left_behind, family(binomial) link(log) corr(exchangeable) vce(robust) eform
+      i.occupation i.Left_behind, family(binomial) link(log) corr(exchangeable) vce(robust) eform
 
-
-/// HPV related lireracy
-by chatbot,sort:ttest literacy,by(time)
-by chatbot,sort:ttest knowledge_literacy,by(time)
-by chatbot,sort:ttest rumor_literacy,by(time)
+* Secondary outcome: HPV-related literacy
+by chatbot, sort: ttest literacy, by(time)
+by chatbot, sort: ttest knowledge_literacy, by(time)
+by chatbot, sort: ttest rumor_literacy, by(time)
 xtmixed literacy chatbot time treatment_time ib3.citytype i.only_child i.influenza_vaccination i.sexual_education i.Left_behind i.relationship /// 
-newage i.m_vaccinated ib3.education i.occupation i.income, vce(cluster class)
+      newage i.m_vaccinated ib3.education i.occupation i.income, vce(cluster class)
 xtmixed knowledge_literacy chatbot time treatment_time ib3.citytype i.only_child i.influenza_vaccination i.sexual_education i.Left_behind i.relationship /// 
-newage i.m_vaccinated ib3.education i.occupation i.income, vce(cluster class)
+      newage i.m_vaccinated ib3.education i.occupation i.income, vce(cluster class)
 xtmixed rumor_literacy chatbot time treatment_time ib3.citytype i.only_child i.influenza_vaccination i.sexual_education i.Left_behind i.relationship /// 
-newage i.m_vaccinated ib3.education i.occupation i.income, vce(cluster class)
+      newage i.m_vaccinated ib3.education i.occupation i.income, vce(cluster class)
 
 
 
